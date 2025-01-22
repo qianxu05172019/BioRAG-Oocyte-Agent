@@ -1,4 +1,4 @@
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
 import os
@@ -7,6 +7,7 @@ class VectorStoreManager:
     def __init__(self):
         load_dotenv()
         self.embeddings = OpenAIEmbeddings(
+            model="text-embedding-ada-002",  # 指定使用的模型
             openai_api_key=os.getenv("OPENAI_API_KEY")
         )
 
