@@ -1,39 +1,34 @@
-from langchain.chat_models import HuggingFaceHub
+from langchain_community.chat_models import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from dotenv import load_dotenv
 import os
 
 class RAGPipeline:
-    def __init__(self, vector_store):
-        """Initialize the RAG pipeline with a vector store"""
+    def __init__(self, vector_store, model_name="gpt-3.5-turbo"):
         load_dotenv()  # Load environment variables
         
-        # Use HuggingFace model instead of OpenAI
-        self.llm = HuggingFaceHub(
-            repo_id="google/flan-t5-large",  # 或选择其他合适的模型
-            model_kwargs={"temperature": 0.5, "max_length": 512},
-            huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN")
+        self.vector_store = vector_store
+        self.llm = ChatOpenAI(
+            model_name=model_name,
+            openai_api_key=os.getenv("OPENAI_API_KEY")
         )
         
-        # Initialize conversation memory
         self.memory = ConversationBufferMemory(
             memory_key="chat_history",
             return_messages=True
         )
         
-        # Initialize the conversation chain
-        self.chain = ConversationalRetrievalChain.from_llm(
+        self.qa_chain = ConversationalRetrievalChain.from_llm(
             llm=self.llm,
-            retriever=vector_store.as_retriever(),
-            memory=self.memory,
-            return_source_documents=True
+            retriever=self.vector_store.as_retriever(),
+            memory=self.memory
         )
     
     def ask(self, question: str) -> str:
         """Ask a question and get a response"""
         try:
-            response = self.chain({"question": question})
+            response = self.qa_chain({"question": question})
             return response['answer']
         except Exception as e:
             return f"Error generating response: {str(e)}"
