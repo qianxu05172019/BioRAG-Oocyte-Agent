@@ -1,11 +1,13 @@
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
+from dotenv import load_dotenv
 import os
 
 class VectorStoreManager:
     def __init__(self):
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="all-MiniLM-L6-v2"
+        load_dotenv()
+        self.embeddings = OpenAIEmbeddings(
+            openai_api_key=os.getenv("OPENAI_API_KEY")
         )
 
     def create_vector_store(self, documents, persist_directory="data/chroma_db"):
