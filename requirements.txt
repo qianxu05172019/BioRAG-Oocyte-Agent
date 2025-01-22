@@ -1,9 +1,10 @@
 streamlit==1.31.1
 langchain==0.1.0
 langchain-community==0.0.13
-openai==1.10.0
-sentence-transformers==2.2.2
-chromadb==0.3.29  # 降级到较老的稳定版本
+sentence-transformers>=2.2.2
+torch>=2.0.0
+transformers>=4.30.0
+chromadb==0.3.29
 python-dotenv==1.0.0
 pdfplumber==0.10.3
 pypdf2==3.0.1
