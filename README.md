@@ -5,17 +5,17 @@
 
 ## Project Overview
 
-BioRAG is a sophisticated Retrieval-Augmented Generation (RAG) system designed to assist researchers in the field of oocyte studies. This project demonstrates the practical application of cutting-edge Machine Learning and Natural Language Processing technologies in biological research.
+**BioRAG** is a sophisticated **Retrieval-Augmented Generation (RAG)** system designed to assist researchers in the field of oocyte studies. This project demonstrates the practical application of cutting-edge Machine Learning and Natural Language Processing technologies in biological research.
 
 ## Technical Implementation
 
 ### Core Technologies
-- **RAG Pipeline**: Implemented using LangChain framework for efficient information retrieval and generation
-- **Vector Embeddings**: Utilizing OpenAI embeddings for semantic search capabilities
+- **RAG Pipeline**: Implemented using **LangChain** framework for efficient information retrieval and generation
+- **Vector Embeddings**: Utilizing **OpenAI** embeddings for semantic search capabilities
 - **Document Processing**: Custom document processor for handling scientific PDFs
-- **LLM Integration**: Leveraging GPT-3.5-turbo for natural language understanding and generation
-- **Vector Store**: ChromaDB for efficient similarity search and document retrieval
-- **Web Interface**: Built with Streamlit for an intuitive user experience
+- **LLM Integration**: Leveraging **GPT-3.5-turbo** for natural language understanding and generation
+- **Vector Store**: **ChromaDB** for efficient similarity search and document retrieval
+- **Web Interface**: Built with **Streamlit** for an intuitive user experience
 
 ### Architecture
 ```
@@ -59,7 +59,7 @@ project/
    - Create visualization for knowledge graphs
 
 3. **System Improvements**
-   - Multi-model support (GPT-4, Claude, etc.)
+   - Multi-model support (**GPT-4**, **Claude**, etc.)
    - Automated PDF metadata extraction
    - Enhanced conversation memory management
    - Chat export functionality
@@ -73,19 +73,18 @@ project/
 ## Deployment
 
 ### Cloud Deployment
-The application is deployed using Streamlit Cloud:
+The application is deployed using **Streamlit Cloud**:
 - Automatic deployment from GitHub repository
-- Environment variables management through Streamlit Cloud
+- Environment variables management through **Streamlit Cloud**
 - Continuous availability with cloud hosting
 - Secure API key management
 
 ### Local Development and Testing
 
-
 ### Prerequisites
 - Python 3.8+
-- OpenAI API key
-- Required packages: `streamlit`, `langchain`, `chromadb`, `openai`
+- **OpenAI** API key
+- Required packages: **`streamlit`**, **`langchain`**, **`chromadb`**, **`openai`**
 
 ### Installation
 ```bash
@@ -96,7 +95,7 @@ pip install -r requirements.txt
 
 ### Configuration
 1. Create a `.env` file in the project root
-2. Add your OpenAI API key:
+2. Add your **OpenAI** API key:
 ```
 OPENAI_API_KEY=your-api-key
 ```
@@ -112,10 +111,10 @@ Try the live demo at: [BioRAG Oocyte Expert](https://biorag-oocyte-36nfepumrpgfw
 ## Technical Stack
 
 ### Core ML/NLP
-- LangChain for RAG pipeline implementation
-- OpenAI embeddings for semantic document search
-- GPT-3.5-turbo for natural language understanding
-- ChromaDB for vector storage and retrieval
+- **LangChain** for **RAG** pipeline implementation
+- **OpenAI** embeddings for semantic document search
+- **GPT-3.5-turbo** for natural language understanding
+- **ChromaDB** for vector storage and retrieval
 
 ### Backend
 - Python with modular architecture
@@ -124,7 +123,7 @@ Try the live demo at: [BioRAG Oocyte Expert](https://biorag-oocyte-36nfepumrpgfw
 - Error handling and logging
 
 ### Frontend
-- Streamlit for web interface
+- **Streamlit** for web interface
 - Session state management
 - Real-time response generation
 - Interactive chat functionality
@@ -136,4 +135,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-*This project was created as part of a portfolio demonstrating Machine Learning Engineering and Data Science capabilities, specifically focusing on NLP, RAG systems, and LLM integration.*
+*This project was created as part of a portfolio demonstrating Machine Learning Engineering and Data Science capabilities, specifically focusing on NLP, **RAG** systems, and LLM integration.*
