@@ -6,10 +6,10 @@ import os
 class VectorStoreManager:
     def __init__(self):
         load_dotenv()
-        self.embeddings = OpenAIEmbeddings(
-            model="text-embedding-ada-002",  # 指定使用的模型
-            openai_api_key=os.getenv("OPENAI_API_KEY")
-        )
+        # Set the API key as an environment variable
+        os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+        # Initialize embeddings without explicit API key parameter
+        self.embeddings = OpenAIEmbeddings()
 
     def create_vector_store(self, documents, persist_directory="data/chroma_db"):
         """Create or update vector store"""
