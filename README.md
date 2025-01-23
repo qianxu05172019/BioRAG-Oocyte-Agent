@@ -70,7 +70,17 @@ project/
    - User feedback integration
    - Collaborative features
 
-## Getting Started
+## Deployment
+
+### Cloud Deployment
+The application is deployed using Streamlit Cloud:
+- Automatic deployment from GitHub repository
+- Environment variables management through Streamlit Cloud
+- Continuous availability with cloud hosting
+- Secure API key management
+
+### Local Development and Testing
+
 
 ### Prerequisites
 - Python 3.8+
@@ -79,7 +89,7 @@ project/
 
 ### Installation
 ```bash
-git clone [repository-url]
+git clone https://github.com/qianxu05172019/biorag-oocyte.git
 cd biorag
 pip install -r requirements.txt
 ```
