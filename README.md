@@ -1,6 +1,7 @@
 # BioRAG: Intelligent Research Assistant for Oocyte Studies
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://biorag-oocyte-36nfepumrpgfwushlci6c2.streamlit.app/)
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/qianxu05172019/biorag-oocyte)
 
 ## Project Overview
 
@@ -98,20 +99,25 @@ streamlit run app.py
 ## Live Demo
 Try the live demo at: [BioRAG Oocyte Expert](https://biorag-oocyte-36nfepumrpgfwushlci6c2.streamlit.app/)
 
-## Skills Demonstrated
-- Large Language Models (LLM) Integration
-- Natural Language Processing (NLP)
-- Vector Embeddings & Semantic Search
-- RAG System Architecture
-- Python Development
-- Web Application Development
-- Scientific Document Processing
-- Machine Learning Engineering
-- Data Engineering
-- API Integration
-- Error Handling
-- State Management
-- User Interface Design
+## Technical Stack
+
+### Core ML/NLP
+- LangChain for RAG pipeline implementation
+- OpenAI embeddings for semantic document search
+- GPT-3.5-turbo for natural language understanding
+- ChromaDB for vector storage and retrieval
+
+### Backend
+- Python with modular architecture
+- PDF processing and text chunking
+- Environment and API key management
+- Error handling and logging
+
+### Frontend
+- Streamlit for web interface
+- Session state management
+- Real-time response generation
+- Interactive chat functionality
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
