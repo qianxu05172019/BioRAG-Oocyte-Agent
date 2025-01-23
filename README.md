@@ -70,6 +70,11 @@ project/
    - User feedback integration
    - Collaborative features
 
+5. **Update knowledgebank**
+   - Internal meeting notes
+   - Internal experiment results
+   - Image of oocytes from different stages
+
 ## Deployment
 
 ### Cloud Deployment
