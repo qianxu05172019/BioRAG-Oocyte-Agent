@@ -3,21 +3,32 @@
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://biorag-oocyte-36nfepumrpgfwushlci6c2.streamlit.app/)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/qianxu05172019/biorag-oocyte)
 
-## Project Overview
+## Overview
 
-**BioRAG** is a sophisticated **Retrieval-Augmented Generation (RAG)** system designed to assist researchers in the field of oocyte studies. This project demonstrates the practical application of cutting-edge Machine Learning and Natural Language Processing technologies in biological research.
+BioRAG is a specialized Retrieval-Augmented Generation (RAG) system designed to assist researchers in oocyte studies. It combines advanced NLP technologies with scientific literature processing to provide intelligent research assistance.
 
-## Technical Implementation
+## Features
 
-### Core Technologies
-- **RAG Pipeline**: Implemented using **LangChain** framework for efficient information retrieval and generation
-- **Vector Embeddings**: Utilizing **OpenAI** embeddings for semantic search capabilities
-- **Document Processing**: Custom document processor for handling scientific PDFs
-- **LLM Integration**: Leveraging **GPT-3.5-turbo** for natural language understanding and generation
-- **Vector Store**: **ChromaDB** for efficient similarity search and document retrieval
-- **Web Interface**: Built with **Streamlit** for an intuitive user experience
+- 🔍 Semantic search across scientific papers
+- 💬 Interactive research-focused chat interface
+- 📚 Real-time citation tracking
+- 🎨 Intuitive user interface
+- 📊 Persistent session management
+- 🔄 System reset functionality
 
-### Architecture Diagram
+## Technical Architecture
+
+### Core Components
+
+- **RAG Pipeline**: Built with LangChain for efficient information retrieval
+- **Embeddings**: OpenAI embeddings for semantic search
+- **Document Processing**: Custom PDF processor for scientific literature
+- **Language Model**: GPT-3.5-turbo integration
+- **Vector Database**: ChromaDB for similarity search
+- **Interface**: Streamlit-based web application
+
+### System Architecture
+
 ```mermaid
 flowchart LR
     docs[Documents] --> loader[DocumentLoader]
@@ -37,131 +48,96 @@ flowchart LR
     style chroma fill:#eeac99
     style llm fill:#84b6f4
     style response fill:#77dd77
+```
 
-
-
-### Architecture
+### Project Structure
 
 ```
 project/
-├── app.py                 # Main Streamlit application
-├── process_pdfs.py        # PDF processing script
+├── app.py                 # Streamlit application
+├── process_pdfs.py        # PDF processing
 ├── src/
-│   ├── document_loader.py # Document processing module
-│   ├── embeddings.py      # Vector embeddings management
+│   ├── document_loader.py # Document processing
+│   ├── embeddings.py      # Vector embeddings
 │   └── rag_pipeline.py    # RAG implementation
 ```
-
-## Features
-
-### Current Functionality
-- 🔍 Semantic search across scientific literature
-- 💬 Interactive chat interface for research queries
-- 📚 Real-time citation tracking
-- 🎨 Clean, user-friendly interface
-- 📊 Session state management
-- 🔄 System reset capabilities
-
-### Technical Highlights
-- Efficient document chunking with controlled overlap
-- Persistent vector storage system
-- Conversation memory implementation
-- Error handling and graceful degradation
-- Modular and maintainable code structure
-
-## Future Development Roadmap
-
-### Planned Features
-1. **Enhanced Citation System**
-   - Implement detailed citation tracking
-   - Add citation export functionality
-   - Create citation networks visualization
-
-2. **Advanced Analytics**
-   - Add research trend analysis
-   - Implement document clustering
-   - Create visualization for knowledge graphs
-
-3. **System Improvements**
-   - Multi-model support (**GPT-4**, **Claude**, etc.)
-   - Automated PDF metadata extraction
-   - Enhanced conversation memory management
-   - Chat export functionality
-
-4. **User Experience**
-   - Custom embedding model fine-tuning
-   - Advanced search filters
-   - User feedback integration
-   - Collaborative features
-
-5. **Update knowledgebank**
-   - Internal meeting notes
-   - Internal experiment results
-   - Image of oocytes from different stages
 
 ## Deployment
 
 ### Cloud Deployment
-The application is deployed using **Streamlit Cloud**:
-- Automatic deployment from GitHub repository
-- Environment variables management through **Streamlit Cloud**
-- Continuous availability with cloud hosting
-- Secure API key management
 
-### Local Development and Testing
+The application is deployed on Streamlit Cloud with:
+- Automated GitHub-based deployment
+- Secure environment variable management
+- Continuous availability
+- Protected API key handling
 
-### Prerequisites
+### Local Development
+
+#### Prerequisites
+
 - Python 3.8+
-- **OpenAI** API key
-- Required packages: **`streamlit`**, **`langchain`**, **`chromadb`**, **`openai`**
+- OpenAI API key
+- Dependencies: streamlit, langchain, chromadb, openai
 
-### Installation
+#### Installation
+
 ```bash
 git clone https://github.com/qianxu05172019/biorag-oocyte.git
 cd biorag
 pip install -r requirements.txt
 ```
 
-### Configuration
-1. Create a `.env` file in the project root
-2. Add your **OpenAI** API key:
+#### Configuration
+
+1. Create `.env` in project root
+2. Add API key:
 ```
 OPENAI_API_KEY=your-api-key
 ```
 
-### Running the Application
+#### Running Locally
+
 ```bash
 streamlit run app.py
 ```
 
+## Future Development
+
+### Planned Features
+
+1. **Enhanced Citations**
+   - Detailed tracking system
+   - Export functionality
+   - Citation network visualization
+
+2. **Analytics Integration**
+   - Research trend analysis
+   - Document clustering
+   - Knowledge graph visualization
+
+3. **System Enhancements**
+   - Multi-model support (GPT-4, Claude)
+   - Automated metadata extraction
+   - Enhanced conversation memory
+   - Chat history export
+
+4. **Knowledge Base Updates**
+   - Meeting notes integration
+   - Experiment results tracking
+   - Oocyte stage imaging
+
 ## Live Demo
-Try the live demo at: [BioRAG Oocyte Expert](https://biorag-oocyte-36nfepumrpgfwushlci6c2.streamlit.app/)
 
-## Technical Stack
-
-### Core ML/NLP
-- **LangChain** for **RAG** pipeline implementation
-- **OpenAI** embeddings for semantic document search
-- **GPT-3.5-turbo** for natural language understanding
-- **ChromaDB** for vector storage and retrieval
-
-### Backend
-- Python with modular architecture
-- PDF processing and text chunking
-- Environment and API key management
-- Error handling and logging
-
-### Frontend
-- **Streamlit** for web interface
-- Session state management
-- Real-time response generation
-- Interactive chat functionality
+Access the live application: [BioRAG Oocyte Expert](https://biorag-oocyte-36nfepumrpgfwushlci6c2.streamlit.app/)
 
 ## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+
+We welcome contributions! Please submit pull requests for any improvements.
 
 ## License
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-*This project was created as part of a portfolio demonstrating Machine Learning Engineering and Data Science capabilities, specifically focusing on NLP, **RAG** systems, and LLM integration.*
+*Developed as a showcase of Machine Learning Engineering and Data Science capabilities, with focus on NLP, RAG systems, and LLM integration.*
