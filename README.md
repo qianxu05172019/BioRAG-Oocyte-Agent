@@ -16,6 +16,25 @@
 - **LLM Integration**: Leveraging **GPT-3.5-turbo** for natural language understanding and generation
 - **Vector Store**: **ChromaDB** for efficient similarity search and document retrieval
 - **Web Interface**: Built with **Streamlit** for an intuitive user experience
+```mermaid
+flowchart LR
+    docs[Documents] --> loader[DocumentLoader]
+    loader --> splitter[TextSplitter]
+    splitter --> embeddings[OpenAIEmbeddings]
+    embeddings --> chroma[ChromaDB]
+    
+    query[User Query] --> retriever[Retriever]
+    chroma --> retriever
+    retriever --> chain[ConversationalRetrievalChain]
+    
+    memory[ConversationMemory] --> chain
+    llm[ChatOpenAI] --> chain
+    chain --> response[Response]
+
+    style docs fill:#f9d5e5
+    style chroma fill:#eeac99
+    style llm fill:#84b6f4
+    style response fill:#77dd77
 
 ### Architecture
 ```
