@@ -44,11 +44,11 @@ flowchart LR
     llm[ChatOpenAI] --> chain
     chain --> response[Response]
 
+    %% Styling
     style docs fill:#f9d5e5
     style chroma fill:#eeac99
     style llm fill:#84b6f4
-    style response fill:#77dd77
-```
+    style response fill:#77dd77```
 
 ### Project Structure
 
