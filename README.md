@@ -16,6 +16,8 @@
 - **LLM Integration**: Leveraging **GPT-3.5-turbo** for natural language understanding and generation
 - **Vector Store**: **ChromaDB** for efficient similarity search and document retrieval
 - **Web Interface**: Built with **Streamlit** for an intuitive user experience
+
+### Architecture Diagram
 ```mermaid
 flowchart LR
     docs[Documents] --> loader[DocumentLoader]
@@ -36,7 +38,10 @@ flowchart LR
     style llm fill:#84b6f4
     style response fill:#77dd77
 
+
+
 ### Architecture
+
 ```
 project/
 ├── app.py                 # Main Streamlit application
