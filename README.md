@@ -18,14 +18,44 @@ BioRAG is a specialized Retrieval-Augmented Generation (RAG) system designed to 
 
 ## Technical Architecture
 
+### Retrieval Mechanism
+
+BioRAG implements a **Representation-based Similarity** approach for document retrieval:
+
+Key characteristics:
+- Documents and queries are independently encoded into dense vector representations
+- Retrieval is performed through vector similarity matching (e.g., cosine similarity)
+- Efficient for large-scale scientific document retrieval
+- Optimized for research paper processing
+- Implemented using OpenAI embeddings and Chroma vector store
+
 ### Core Components
 
-- **RAG Pipeline**: Built with LangChain for efficient information retrieval
-- **Embeddings**: OpenAI embeddings for semantic search
-- **Document Processing**: Custom PDF processor for scientific literature
-- **Language Model**: GPT-3.5-turbo integration
-- **Vector Database**: ChromaDB for similarity search
-- **Interface**: Streamlit-based web application
+#### 1. Document Processing
+```python
+class DocumentProcessor:
+    def __init__(self):
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+            length_function=len
+        )
+```
+- Specialized PDF processor for scientific literature
+- Recursive character text splitting
+- Optimized chunk size and overlap for research papers
+
+#### 2. Vector Store Management
+- ChromaDB integration for similarity search
+- Efficient document embedding storage
+- Persistent vector database
+- Optimized for research paper embeddings
+
+#### 3. RAG Pipeline
+- Language Model: GPT-3.5-turbo
+- Conversational memory for context retention
+- Scientific context-aware retrieval
+- Citation-aware response generation
 
 ### System Architecture
 
@@ -90,16 +120,31 @@ pip install -r requirements.txt
 
 #### Configuration
 
-1. Create `.env` in project root
-2. Add API key:
+1. Create `.env` in project root:
 ```
 OPENAI_API_KEY=your-api-key
 ```
 
-#### Running Locally
+#### Usage Example
 
-```bash
-streamlit run app.py
+```python
+from document_loader import DocumentProcessor
+from embeddings import VectorStoreManager
+from rag_pipeline import RAGPipeline
+
+# Process research papers
+processor = DocumentProcessor()
+docs = processor.load_pdfs("path/to/papers")
+
+# Create vector store
+vector_store_manager = VectorStoreManager()
+vector_store = vector_store_manager.create_vector_store(docs)
+
+# Initialize RAG pipeline
+rag = RAGPipeline(vector_store)
+
+# Research query
+response = rag.ask("What are the key factors affecting oocyte maturation?")
 ```
 
 ## Future Development
@@ -140,4 +185,4 @@ We welcome contributions! Please submit pull requests for any improvements.
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-*Developed as a showcase of Machine Learning Engineering and Data Science capabilities, with focus on NLP, RAG systems, and LLM integration.*
+*Developed as a showcase of Machine Learning Engineering and Data Science capabilities, with focus on NLP, RAG systems, and LLM integration in biomedical research.*
