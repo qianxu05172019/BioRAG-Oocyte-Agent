@@ -126,7 +126,7 @@ if prompt := st.chat_input("Ask your question about oocyte research..."):
                     st.session_state.chat_history.append({
                         "role": "assistant",
                         "content": response,
-                        "citations": ["More detailed citations will be implemented"]  # 将来可以添加实际引用
+                        "citations": ["More detailed citations will be implemented"]  
                     })
                     
                     
