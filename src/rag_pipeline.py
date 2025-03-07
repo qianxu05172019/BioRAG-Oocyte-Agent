@@ -35,8 +35,8 @@ class RAGPipeline:
 if __name__ == '__main__':
     rag = RAGPipeline()
     while True:
-        user_input = input("请输入问题：")
+        user_input = input("Please type your question:")
         if user_input.lower() == 'exit':
             break
         result = rag.ask(user_input)
-        print("回答：", result['answer'])
+        print("Answer：", result['answer'])
