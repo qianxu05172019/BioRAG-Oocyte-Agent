@@ -1,34 +1,42 @@
-from langchain_community.chat_models import ChatOpenAI
+from langchain.vectorstores import Chroma
+from langchain.chat_models import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.memory import ConversationBufferMemory
-from dotenv import load_dotenv
-import os
 
 class RAGPipeline:
-    def __init__(self, vector_store, model_name="gpt-3.5-turbo"):
-        load_dotenv()  # Load environment variables
-        
-        self.vector_store = vector_store
-        self.llm = ChatOpenAI(
-            model_name=model_name,
-            openai_api_key=os.getenv("OPENAI_API_KEY")
+    def __init__(self, persist_directory="VectorStore"):
+        # 初始化embedding模型
+        self.embeddings = OpenAIEmbeddings()
+
+        # 初始化Chroma向量数据库
+        self.vector_store = Chroma(
+            persist_directory=persist_directory,
+            embedding_function=self.embeddings
         )
-        
-        self.memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True
-        )
-        
+
+        # 初始化记忆功能
+        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+
+        # 初始化ConversationalRetrievalChain，加入memory
         self.qa_chain = ConversationalRetrievalChain.from_llm(
-            llm=self.llm,
-            retriever=self.vector_store.as_retriever(),
-            memory=self.memory
+            ChatOpenAI(temperature=0),
+            retriever=self.vector_store.as_retriever(search_kwargs={"k": 4}),
+            memory=self.memory,
+            return_source_documents=True,
+            verbose=True
         )
-    
-    def ask(self, question: str) -> str:
-        """Ask a question and get a response"""
-        try:
-            response = self.qa_chain({"question": question})
-            return response['answer']
-        except Exception as e:
-            return f"Error generating response: {str(e)}"
+
+    def ask(self, query: str):
+        response = self.qa_chain({"question": query})
+        return response
+
+# 使用示例
+if __name__ == '__main__':
+    rag = RAGPipeline()
+    while True:
+        user_input = input("请输入问题：")
+        if user_input.lower() == 'exit':
+            break
+        result = rag.ask(user_input)
+        print("回答：", result['answer'])
