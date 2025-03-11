@@ -2,6 +2,8 @@ from langchain_community.vectorstores import Chroma
 from langchain_community.chat_models import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
+
 
 class RAGPipeline:
     def __init__(self, persist_directory="VectorStore"):
