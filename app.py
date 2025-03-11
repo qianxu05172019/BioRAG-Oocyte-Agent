@@ -4,7 +4,8 @@ from src.embeddings import VectorStoreManager
 from src.rag_pipeline import RAGPipeline
 import os
 
-
+if not os.getenv("OPENAI_API_KEY"):
+    raise EnvironmentError("请设置 OPENAI_API_KEY 环境变量或在 .env 文件中提供")
 st.set_page_config(
     page_title="Oocyte Expert",
     page_icon="🧬",
