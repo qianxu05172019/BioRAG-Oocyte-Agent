@@ -91,7 +91,7 @@ if not st.session_state.is_initialized:
                 st.stop()
             
            
-            st.session_state.rag_pipeline = RAGPipeline(data/chroma_db)
+            st.session_state.rag_pipeline = RAGPipeline("data/chroma_db")
             st.session_state.is_initialized = True
             
         except Exception as e:
