@@ -1,6 +1,6 @@
 # BioRAG: Intelligent Research Assistant for Oocyte Studies
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)]([https://biorag-oocyte-36nfepumrpgfwushlci6c2.streamlit.app/](https://qianxu05172019-biorag-lr-app-jll7z0.streamlit.app/))
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://qianxu05172019-biorag-lr-app-jll7z0.streamlit.app/)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/qianxu05172019/biorag-oocyte)
 
 ## Overview
