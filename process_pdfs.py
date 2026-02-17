@@ -4,7 +4,7 @@ import os
 
 def main():
     # 设置PDF目录路径
-    pdf_directory = "data/pdfs"  # 确保这个目录存在并包含PDF文件
+    pdf_directory = "data/papers"  # PDF论文存放目录
     
     # 检查目录是否存在
     if not os.path.exists(pdf_directory):

@@ -21,7 +21,6 @@ class VectorStoreManager:
             embedding=self.embeddings,
             persist_directory=persist_directory
         )
-        vector_store.persist()
         return vector_store
 
     def load_vector_store(self, persist_directory="data/chroma_db"):

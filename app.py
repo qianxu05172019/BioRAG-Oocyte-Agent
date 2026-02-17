@@ -1,8 +1,10 @@
 import streamlit as st
-from src.document_loader import DocumentProcessor
 from src.embeddings import VectorStoreManager
 from src.rag_pipeline import RAGPipeline
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 if not os.getenv("OPENAI_API_KEY"):
     raise EnvironmentError("请设置 OPENAI_API_KEY 环境变量或在 .env 文件中提供")
@@ -48,8 +50,6 @@ if 'rag_pipeline' not in st.session_state:
     st.session_state.rag_pipeline = None
 if 'is_initialized' not in st.session_state:
     st.session_state.is_initialized = False
-if 'vector_store' not in st.session_state:
-    st.session_state.vector_store = None
 
 
 with st.sidebar:
@@ -71,7 +71,7 @@ with st.sidebar:
 
     if st.button("Reset System"):
         st.session_state.chat_history = []
-        st.experimental_rerun()
+        st.rerun()
 
 
 st.title("Oocyte Research Assistant")
@@ -80,25 +80,48 @@ st.title("Oocyte Research Assistant")
 if not st.session_state.is_initialized:
     with st.spinner("Initializing knowledge base..."):
         try:
-            
             vector_store_manager = VectorStoreManager()
-            
-           
             try:
                 vector_store = vector_store_manager.load_vector_store("data/chroma_db")
-                st.session_state.vector_store = vector_store
             except ValueError:
                 st.error("Vector store not found. Please process PDF documents first.")
                 st.stop()
-            
-           
-            st.session_state.rag_pipeline = RAGPipeline("data/chroma_db")
+
+            st.session_state.rag_pipeline = RAGPipeline(vector_store)
             st.session_state.is_initialized = True
-            
+
         except Exception as e:
             st.error(f"Error initializing system: {str(e)}")
             st.stop()
 
+
+SUGGESTED_QUESTIONS = {
+    "OmniPath": [
+        "What is OmniPath and what types of biological data does it integrate?",
+        "How does OmniPath compare to other pathway databases like KEGG or Reactome?",
+        "What are the main data sources combined in OmniPath?",
+    ],
+    "CellChat & CellPhoneDB": [
+        "What is CellChat and how does it infer cell-cell communication?",
+        "How does CellPhoneDB predict ligand-receptor interactions from scRNA-seq data?",
+        "What are the differences between CellChat and CellPhoneDB?",
+    ],
+    "Oocyte Biology": [
+        "What metabolites are secreted by cumulus cells during oocyte maturation?",
+        "How do cumulus cells influence oocyte developmental competence?",
+        "What signaling pathways regulate oocyte maturation?",
+    ],
+}
+
+# 没有聊天记录时显示推荐问题
+if not st.session_state.chat_history:
+    st.markdown("### Try asking:")
+    for category, questions in SUGGESTED_QUESTIONS.items():
+        st.markdown(f"**{category}**")
+        for q in questions:
+            if st.button(q, key=q):
+                st.session_state.pending_question = q
+                st.rerun()
 
 for idx, message in enumerate(st.session_state.chat_history):
     with st.chat_message(message["role"]):
@@ -109,7 +132,12 @@ for idx, message in enumerate(st.session_state.chat_history):
                     st.markdown(f"*{citation}*")
 
 
-if prompt := st.chat_input("Ask your question about oocyte research..."):
+# 处理推荐问题点击或用户输入
+pending = st.session_state.pop("pending_question", None)
+typed = st.chat_input("Ask your question about oocyte research...")
+prompt = pending or typed
+
+if prompt:
   
     st.session_state.chat_history.append({"role": "user", "content": prompt})
     
@@ -122,16 +150,23 @@ if prompt := st.chat_input("Ask your question about oocyte research..."):
                 try:
                    
                     response = st.session_state.rag_pipeline.ask(prompt)
-                    
-                  
+                    answer = response["answer"]
+                    sources = response.get("source_documents", [])
+
+                    # 提取引用信息
+                    citations = []
+                    for doc in sources:
+                        src = doc.metadata.get("source", "")
+                        page = doc.metadata.get("page", "")
+                        citations.append(f"{src}, Page {int(page) + 1}")
+
                     st.session_state.chat_history.append({
                         "role": "assistant",
-                        "content": response,
-                        "citations": ["More detailed citations will be implemented"]  
+                        "content": answer,
+                        "citations": citations
                     })
-                    
-                    
-                    st.write(response)
+
+                    st.write(answer)
                     
                 except Exception as e:
                     st.error(f"Error generating response: {str(e)}")
@@ -143,7 +178,7 @@ col1, col2 = st.columns(2)
 with col1:
     if st.button("Clear Conversation"):
         st.session_state.chat_history = []
-        st.experimental_rerun()
+        st.rerun()
 
 with col2:
     if st.button("Export Chat"):
