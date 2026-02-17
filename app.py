@@ -180,6 +180,10 @@ if prompt:
                     })
 
                     st.write(answer)
+                    if citations:
+                        with st.expander("View Citations"):
+                            for citation in citations:
+                                st.markdown(f"*{citation}*")
                     
                 except Exception as e:
                     st.error(f"Error generating response: {str(e)}")
