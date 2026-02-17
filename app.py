@@ -6,8 +6,13 @@ import os
 
 load_dotenv()
 
+# 支持 Streamlit Cloud secrets 和本地 .env 两种方式
 if not os.getenv("OPENAI_API_KEY"):
-    raise EnvironmentError("请设置 OPENAI_API_KEY 环境变量或在 .env 文件中提供")
+    try:
+        os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        st.error("Please set OPENAI_API_KEY in .env file or Streamlit Cloud Secrets.")
+        st.stop()
 st.set_page_config(
     page_title="Oocyte Expert",
     page_icon="🧬",
@@ -81,11 +86,19 @@ if not st.session_state.is_initialized:
     with st.spinner("Initializing knowledge base..."):
         try:
             vector_store_manager = VectorStoreManager()
+
+            # 尝试加载已有向量库，不存在则自动构建
             try:
                 vector_store = vector_store_manager.load_vector_store("data/chroma_db")
             except ValueError:
-                st.error("Vector store not found. Please process PDF documents first.")
-                st.stop()
+                st.info("Building vector store for the first time, this may take a moment...")
+                from src.document_loader import DocumentProcessor
+                processor = DocumentProcessor()
+                documents = processor.load_pdfs("data/papers")
+                if not documents:
+                    st.error("No PDF documents found in data/papers/")
+                    st.stop()
+                vector_store = vector_store_manager.create_vector_store(documents)
 
             st.session_state.rag_pipeline = RAGPipeline(vector_store)
             st.session_state.is_initialized = True
