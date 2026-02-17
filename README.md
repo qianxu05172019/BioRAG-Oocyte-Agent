@@ -1,78 +1,51 @@
 # BioRAG: Intelligent Research Assistant for Oocyte Studies
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://qianxu05172019-biorag-lr-app-jll7z0.streamlit.app/)
-[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/qianxu05172019/biorag-oocyte)
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/qianxu05172019/BioRAG-Oocyte-Agent)
 
 ## Overview
 
-BioRAG is a specialized Retrieval-Augmented Generation (RAG) system designed to assist researchers in oocyte studies. It combines advanced NLP technologies with scientific literature processing to provide intelligent research assistance.
+BioRAG is a specialized Retrieval-Augmented Generation (RAG) system designed to assist researchers in oocyte studies and cell-cell communication analysis. It combines advanced NLP technologies with scientific literature processing to provide intelligent, citation-backed research assistance.
 
 ## Features
 
-- 🔍 Semantic search across scientific papers
-- 💬 Interactive research-focused chat interface
-- 📚 Real-time citation tracking
-- 🎨 Intuitive user interface
-- 📊 Persistent session management
-- 🔄 System reset functionality
+- Semantic search across scientific papers (OmniPath, CellChat, CellPhoneDB, oocyte biology)
+- Interactive chat interface with multi-turn conversation support
+- Real-time citation tracking with source PDF and page numbers
+- Suggested questions for quick exploration
+- Auto-builds vector store on first launch (no manual preprocessing needed)
+- Deployable on both local and Streamlit Cloud
+
+## Knowledge Base
+
+The system is built on 5 curated research papers:
+
+| Paper | Topic |
+|-------|-------|
+| OmniPath (Nature Methods, 2016) | Integrated signaling pathway knowledge base |
+| OmniPath (NAR, 2025) | Multi-omics biological interaction database |
+| CellChat (Nature Communications, 2021) | Cell-cell communication inference from scRNA-seq |
+| CellPhoneDB (Nature Protocols, 2020) | Ligand-receptor interaction prediction |
+| Metabolomics (Scientific Reports, 2018) | Cumulus cell metabolites and oocyte maturation |
 
 ## Technical Architecture
-
-### Retrieval Mechanism
-
-BioRAG implements a **Representation-based Similarity** approach for document retrieval:
-
-Key characteristics:
-- Documents and queries are independently encoded into dense vector representations
-- Retrieval is performed through vector similarity matching (e.g., cosine similarity)
-- Efficient for large-scale scientific document retrieval
-- Optimized for research paper processing
-- Implemented using OpenAI embeddings and Chroma vector store
-
-### Core Components
-
-#### 1. Document Processing
-```python
-class DocumentProcessor:
-    def __init__(self):
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len
-        )
-```
-- Specialized PDF processor for scientific literature
-- Recursive character text splitting
-- Optimized chunk size and overlap for research papers
-
-#### 2. Vector Store Management
-- ChromaDB integration for similarity search
-- Efficient document embedding storage
-- Persistent vector database
-- Optimized for research paper embeddings
-
-#### 3. RAG Pipeline
-- Language Model: GPT-3.5-turbo
-- Conversational memory for context retention
-- Scientific context-aware retrieval
-- Citation-aware response generation
 
 ### System Architecture
 
 ```mermaid
 flowchart LR
-    docs[Documents] --> loader[DocumentLoader]
+    docs[PDF Papers] --> loader[DocumentProcessor]
     loader --> splitter[TextSplitter]
     splitter --> embeddings[OpenAIEmbeddings]
     embeddings --> chroma[ChromaDB]
-    
+
     query[User Query] --> retriever[Retriever]
     chroma --> retriever
     retriever --> chain[ConversationalRetrievalChain]
-    
+
     memory[ConversationMemory] --> chain
     llm[ChatOpenAI] --> chain
-    chain --> response[Response]
+    chain --> response[Answer + Citations]
 
     style docs fill:#f9d5e5
     style chroma fill:#eeac99
@@ -80,61 +53,79 @@ flowchart LR
     style response fill:#77dd77
 ```
 
+### Core Components
+
+| Component | Module | Role |
+|-----------|--------|------|
+| Document Processing | `src/document_loader.py` | PDF loading + recursive text splitting (1000 chars, 200 overlap) |
+| Vector Store | `src/embeddings.py` | OpenAI Embeddings (1536-dim) + ChromaDB storage |
+| RAG Pipeline | `src/rag_pipeline.py` | Question condensing + retrieval (top-4) + GPT generation |
+| Web UI | `app.py` | Streamlit chat interface with citations and suggested questions |
+
 ### Project Structure
 
 ```
-project/
-├── app.py                 # Streamlit application
-├── process_pdfs.py        # PDF processing
+BioRAG-Oocyte-Agent/
+├── app.py                 # Streamlit web application
+├── process_pdfs.py        # Offline PDF preprocessing script
+├── requirements.txt       # Python dependencies
 ├── src/
-│   ├── document_loader.py # Document processing
-│   ├── embeddings.py      # Vector embeddings
-│   └── rag_pipeline.py    # RAG implementation
+│   ├── document_loader.py # PDF loading and text splitting
+│   ├── embeddings.py      # Vector store management (VectorStoreManager)
+│   └── rag_pipeline.py    # RAG pipeline (accepts vector store via DI)
+└── data/
+    └── papers/            # Source PDF documents
 ```
 
 ## Deployment
 
-### Cloud Deployment
+### Live Demo
 
-The application is deployed on Streamlit Cloud with:
-- Automated GitHub-based deployment
-- Secure environment variable management
-- Continuous availability
-- Protected API key handling
+Access the live application: [BioRAG Oocyte Expert](https://qianxu05172019-biorag-lr-app-jll7z0.streamlit.app/)
 
 ### Local Development
 
 #### Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - OpenAI API key
-- Dependencies: streamlit, langchain, chromadb, openai
 
 #### Installation
 
 ```bash
-git clone https://github.com/qianxu05172019/biorag-oocyte.git
-cd biorag
+git clone https://github.com/qianxu05172019/BioRAG-Oocyte-Agent.git
+cd BioRAG-Oocyte-Agent
 pip install -r requirements.txt
 ```
 
 #### Configuration
 
-1. Create `.env` in project root:
+Create `.env` in project root:
 ```
 OPENAI_API_KEY=your-api-key
 ```
 
-#### Usage Example
+#### Run
+
+```bash
+# Option 1: Launch the web app (auto-builds vector store on first run)
+streamlit run app.py
+
+# Option 2: Pre-build vector store separately
+python process_pdfs.py
+streamlit run app.py
+```
+
+#### Programmatic Usage
 
 ```python
-from document_loader import DocumentProcessor
-from embeddings import VectorStoreManager
-from rag_pipeline import RAGPipeline
+from src.document_loader import DocumentProcessor
+from src.embeddings import VectorStoreManager
+from src.rag_pipeline import RAGPipeline
 
 # Process research papers
 processor = DocumentProcessor()
-docs = processor.load_pdfs("path/to/papers")
+docs = processor.load_pdfs("data/papers")
 
 # Create vector store
 vector_store_manager = VectorStoreManager()
@@ -145,40 +136,8 @@ rag = RAGPipeline(vector_store)
 
 # Research query
 response = rag.ask("What are the key factors affecting oocyte maturation?")
+print(response["answer"])
 ```
-
-## Future Development
-
-### Planned Features
-
-1. **Enhanced Citations**
-   - Detailed tracking system
-   - Export functionality
-   - Citation network visualization
-
-2. **Analytics Integration**
-   - Research trend analysis
-   - Document clustering
-   - Knowledge graph visualization
-
-3. **System Enhancements**
-   - Multi-model support (GPT-4, Claude)
-   - Automated metadata extraction
-   - Enhanced conversation memory
-   - Chat history export
-
-4. **Knowledge Base Updates**
-   - Meeting notes integration
-   - Experiment results tracking
-   - Oocyte stage imaging
-
-## Live Demo
-
-Access the live application: [BioRAG Oocyte Expert](https://biorag-oocyte-36nfepumrpgfwushlci6c2.streamlit.app/)
-
-## Contributing
-
-We welcome contributions! Please submit pull requests for any improvements.
 
 ## License
 
