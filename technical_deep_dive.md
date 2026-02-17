@@ -25,7 +25,7 @@
 阶段一：离线预处理（只跑一次）
 ┌─────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌──────────────┐
 │  PDF 论文    │ →  │ DocumentProcessor │ →  │ VectorStoreManager│ →  │  ChromaDB    │
-│  (data/pdfs) │    │ (加载+分块)       │    │ (编码+存储)        │    │ (持久化向量库) │
+│  (data/papers) │    │ (加载+分块)       │    │ (编码+存储)        │    │ (持久化向量库) │
 └─────────────┘    └──────────────────┘    └─────────────────┘    └──────────────┘
      process_pdfs.py 驱动这个流程
 
@@ -49,7 +49,7 @@
 
 ```python
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class DocumentProcessor:
     def __init__(self):
@@ -76,7 +76,7 @@ class DocumentProcessor:
 
 ```python
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 ```
 
 | 组件 | 作用 |
@@ -145,18 +145,18 @@ def load_pdfs(self, directory_path):
 **输入：**
 | 参数 | 类型 | 例子 |
 |------|------|------|
-| `directory_path` | `str` | `"data/pdfs"` |
+| `directory_path` | `str` | `"data/papers"` |
 
 **内部流程：**
 
 ```
-第1步: DirectoryLoader 扫描 data/pdfs/ 下所有 .pdf 文件
+第1步: DirectoryLoader 扫描 data/papers/ 下所有 .pdf 文件
        ↓
 第2步: 对每个 PDF 用 PyPDFLoader 逐页提取文本
        ↓ 得到 List[Document]，每个 Document = 一页 PDF
        ↓ Document 对象有两个属性：
        ↓   .page_content = "这一页的文本内容"
-       ↓   .metadata = {"source": "data/pdfs/paper1.pdf", "page": 0}
+       ↓   .metadata = {"source": "data/papers/paper1.pdf", "page": 0}
        ↓
 第3步: text_splitter.split_documents() 把每页文本切成 ~1000 字符的块
        ↓ metadata 会被继承，每个块都知道自己来自哪个文件、哪一页
@@ -226,7 +226,6 @@ class VectorStoreManager:
             embedding=self.embeddings,
             persist_directory=persist_directory
         )
-        vector_store.persist()
         return vector_store
 
     def load_vector_store(self, persist_directory="data/chroma_db"):
@@ -284,7 +283,6 @@ def create_vector_store(self, documents, persist_directory="data/chroma_db"):
         embedding=self.embeddings,
         persist_directory=persist_directory
     )
-    vector_store.persist()
     return vector_store
 ```
 
@@ -303,8 +301,7 @@ def create_vector_store(self, documents, persist_directory="data/chroma_db"):
        a) 对每个 Document 的 page_content 调用 OpenAI Embedding API
           "BMP15 activates SMAD..." → [0.012, -0.034, ..., 0.078] (1536维)
        b) 把向量 + 原文 + metadata 存进 ChromaDB
-       ↓
-第3步: vector_store.persist() 把内存中的数据写到磁盘
+       （ChromaDB 0.4+ 在指定 persist_directory 后会自动持久化到磁盘，无需显式调用 persist()）
        生成文件在 data/chroma_db/ 目录下
 ```
 
@@ -317,7 +314,7 @@ def create_vector_store(self, documents, persist_directory="data/chroma_db"):
 - 向 OpenAI API 发送 100 次 Embedding 请求（或批量发送）
 - 每个块变成 1536 个浮点数
 - 100 个向量 + 100 段原文 + 100 条 metadata 存入 ChromaDB
-- 数据持久化到 `data/chroma_db/` 目录（SQLite + 索引文件）
+- ChromaDB 0.4+ 在指定 `persist_directory` 后自动持久化到 `data/chroma_db/` 目录（SQLite + 索引文件），无需显式调用 `persist()`
 
 #### `load_vector_store` 方法
 
@@ -370,9 +367,9 @@ def load_vector_store(self, persist_directory="data/chroma_db"):
 
 ---
 
-**Q: What does `persist()` actually do under the hood?**
+**Q: Why don't you call `persist()` after creating the vector store?**
 
-> "ChromaDB stores vectors in memory during the session. `persist()` flushes that in-memory data to disk in the `persist_directory`. Under the hood, ChromaDB uses SQLite for metadata storage and a custom index format for the vectors. After `persist()` is called, the directory contains files like `chroma.sqlite3` for metadata and index files for the vector index. This means if the process restarts, we can reload the exact same state without re-computing embeddings — which saves both time and API costs."
+> "Starting with ChromaDB 0.4+, explicit `persist()` calls are no longer needed — and in fact are deprecated. When you pass a `persist_directory` to `Chroma.from_documents()`, ChromaDB automatically persists data to disk on every write operation. Under the hood, it uses SQLite for metadata storage and a custom index format for the vectors. The directory contains files like `chroma.sqlite3` for metadata and index files for the vector index. This means if the process restarts, we can reload the exact same state without re-computing embeddings — which saves both time and API costs. The older pattern of calling `vector_store.persist()` manually was required in ChromaDB 0.3.x but is now unnecessary and will emit a deprecation warning."
 
 ---
 
@@ -383,9 +380,9 @@ def load_vector_store(self, persist_directory="data/chroma_db"):
 ### 完整源码
 
 ```python
-from langchain_community.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
+from langchain_openai import ChatOpenAI
+from langchain_classic.memory import ConversationBufferMemory
+from langchain_classic.chains import ConversationalRetrievalChain
 
 class RAGPipeline:
     def __init__(self, vector_store):
@@ -394,7 +391,8 @@ class RAGPipeline:
 
         self.memory = ConversationBufferMemory(
             memory_key="chat_history",
-            return_messages=True
+            return_messages=True,
+            output_key="answer"
         )
 
         self.qa_chain = ConversationalRetrievalChain.from_llm(
@@ -402,6 +400,7 @@ class RAGPipeline:
             retriever=self.vector_store.as_retriever(search_kwargs={"k": 4}),
             memory=self.memory,
             return_source_documents=True,
+            output_key="answer",
             verbose=True
         )
 
@@ -438,7 +437,8 @@ self.vector_store = vector_store
 ```python
 self.memory = ConversationBufferMemory(
     memory_key="chat_history",
-    return_messages=True
+    return_messages=True,
+    output_key="answer"
 )
 ```
 
@@ -446,6 +446,7 @@ self.memory = ConversationBufferMemory(
 |------|----|------|
 | `memory_key` | `"chat_history"` | 记忆存储在字典的 `chat_history` 键下 |
 | `return_messages` | `True` | 以 Message 对象列表的格式返回历史（而不是纯字符串拼接） |
+| `output_key` | `"answer"` | 指定从 chain 输出中取哪个 key 作为 AI 回复存入记忆。因为 chain 返回多个 key（answer、source_documents），不指定会报错 |
 
 **ConversationBufferMemory 的工作方式：**
 
@@ -470,6 +471,7 @@ self.qa_chain = ConversationalRetrievalChain.from_llm(
     retriever=self.vector_store.as_retriever(search_kwargs={"k": 4}), # 检索器
     memory=self.memory,                                              # 记忆
     return_source_documents=True,                                     # 返回引用
+    output_key="answer",                                              # 输出键名
     verbose=True                                                      # 打印调试日志
 )
 ```
@@ -482,6 +484,7 @@ self.qa_chain = ConversationalRetrievalChain.from_llm(
 | `retriever` | ChromaDB retriever | 负责从向量库检索相关文档。`k=4` 表示返回最相似的 4 个块 |
 | `memory` | ConversationBufferMemory | 维护对话历史，支持多轮问答 |
 | `return_source_documents` | `True` | 在响应中附带检索到的原始文档（用于展示引用） |
+| `output_key` | `"answer"` | 指定 chain 输出中回答文本的键名，与 memory 的 `output_key` 对应，确保记忆正确记录 AI 的回复 |
 | `verbose` | `True` | 在终端打印 Chain 的执行日志（调试用） |
 
 **`as_retriever(search_kwargs={"k": 4})` 做了什么？**
@@ -650,7 +653,7 @@ from src.embeddings import VectorStoreManager
 import os
 
 def main():
-    pdf_directory = "data/pdfs"
+    pdf_directory = "data/papers"
 
     if not os.path.exists(pdf_directory):
         os.makedirs(pdf_directory)
@@ -699,11 +702,11 @@ if __name__ == "__main__":
 ```
 python process_pdfs.py
         ↓
-检查 data/pdfs/ 目录是否存在 → 不存在就创建并提示用户放入 PDF
+检查 data/papers/ 目录是否存在 → 不存在就创建并提示用户放入 PDF
         ↓
 检查目录里有没有 .pdf 文件 → 没有就提示用户添加
         ↓
-DocumentProcessor().load_pdfs("data/pdfs")
+DocumentProcessor().load_pdfs("data/papers")
   → 读取所有 PDF → 提取文本 → 切分成 ~1000 字符的块
   → 返回 List[Document]
         ↓
@@ -744,18 +747,25 @@ VectorStoreManager().create_vector_store(documents)
 
 这是**用户看到的界面**——Streamlit Web 应用，把所有后端模块串成一个可交互的产品。
 
-### 完整源码（152 行）— 分四个逻辑段落讲解
+### 完整源码（约 200 行）— 分四个逻辑段落讲解
 
-#### 段落 1: 配置与样式（第 1-42 行）
+#### 段落 1: 配置与样式（第 1-49 行）
 
 ```python
 import streamlit as st
 from src.embeddings import VectorStoreManager
 from src.rag_pipeline import RAGPipeline
+from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 if not os.getenv("OPENAI_API_KEY"):
-    raise EnvironmentError("请设置 OPENAI_API_KEY 环境变量或在 .env 文件中提供")
+    try:
+        os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        st.error("Please set OPENAI_API_KEY in .env file or Streamlit Cloud Secrets.")
+        st.stop()
 
 st.set_page_config(
     page_title="Oocyte Expert",
@@ -768,11 +778,12 @@ st.markdown("""<style>...</style>""", unsafe_allow_html=True)
 ```
 
 **做了什么：**
-1. **环境检查：** 启动时立即检查 API Key 是否存在，没有就直接报错退出。这是安全实践——fail fast。
-2. **页面配置：** `st.set_page_config()` 设置浏览器标签标题、图标、页面布局。`layout="wide"` 让页面使用全宽而不是默认的居中窄列。
-3. **自定义 CSS：** 通过 `st.markdown` 注入 CSS 来美化聊天界面。定义了 `.chat-message`、`.user-message`、`.assistant-message` 和 `.citation` 四个样式类。
+1. **环境变量加载：** `load_dotenv()` 从 `.env` 文件加载环境变量（如 `OPENAI_API_KEY`），支持本地开发。
+2. **双重 API Key 获取：** 先尝试从环境变量（`.env`）获取 API Key；如果不存在，尝试从 Streamlit Cloud Secrets 获取。这样同时支持本地开发和 Streamlit Cloud 部署两种场景。如果两者都没有，显示错误并停止。
+3. **页面配置：** `st.set_page_config()` 设置浏览器标签标题、图标、页面布局。`layout="wide"` 让页面使用全宽而不是默认的居中窄列。
+4. **自定义 CSS：** 通过 `st.markdown` 注入 CSS 来美化聊天界面。定义了 `.chat-message`、`.user-message`、`.assistant-message` 和 `.citation` 四个样式类。
 
-#### 段落 2: Session State 初始化（第 44-52 行）
+#### 段落 2: Session State 初始化（第 52-57 行）
 
 ```python
 if 'chat_history' not in st.session_state:
@@ -808,7 +819,7 @@ Streamlit 的执行模型很特殊：**每次用户交互（点击按钮、输�
 
 如果不用 `session_state`，每次用户输入后，对话历史和 RAG 流水线都会被清空，多轮对话就不可能实现。
 
-#### 段落 3: 侧边栏和系统初始化（第 55-100 行）
+#### 段落 3: 侧边栏和系统初始化（第 60-108 行）
 
 ```python
 # 侧边栏
@@ -823,7 +834,7 @@ with st.sidebar:
 
     if st.button("Reset System"):
         st.session_state.chat_history = []
-        st.experimental_rerun()
+        st.rerun()
 
 # 系统初始化（只在首次运行时执行）
 if not st.session_state.is_initialized:
@@ -833,8 +844,14 @@ if not st.session_state.is_initialized:
             try:
                 vector_store = vector_store_manager.load_vector_store("data/chroma_db")
             except ValueError:
-                st.error("Vector store not found. Please process PDF documents first.")
-                st.stop()
+                st.info("Building vector store for the first time, this may take a moment...")
+                from src.document_loader import DocumentProcessor
+                processor = DocumentProcessor()
+                documents = processor.load_pdfs("data/papers")
+                if not documents:
+                    st.error("No PDF documents found in data/papers/")
+                    st.stop()
+                vector_store = vector_store_manager.create_vector_store(documents)
 
             st.session_state.rag_pipeline = RAGPipeline(vector_store)
             st.session_state.is_initialized = True
@@ -857,17 +874,57 @@ is_initialized == False? (首次访问)
         ↓
 VectorStoreManager() → 初始化 Embedding 模型
         ↓
-load_vector_store("data/chroma_db") → 从磁盘加载向量库
-        ↓ 如果向量库不存在 → 报错 "Please process PDF documents first." → 停止
+load_vector_store("data/chroma_db") → 尝试从磁盘加载向量库
+        ↓ 如果向量库不存在 → 自动构建向量库：
+        ↓   1. 显示 st.info 提示用户正在构建
+        ↓   2. DocumentProcessor().load_pdfs("data/papers") 加载并分块
+        ↓   3. create_vector_store(documents) 编码并持久化
         ↓
 RAGPipeline(vector_store) → 复用已加载的向量库，创建 RAG 流水线
         ↓
 is_initialized = True → 下次脚本重新执行时跳过这个块
 ```
 
-**`st.stop()` 的作用：** 立即停止脚本执行，页面只显示到目前为止渲染的内容。这是一种优雅的错误处理——如果向量库不存在，不要继续渲染聊天界面。
+**`st.stop()` 的作用：** 立即停止脚本执行，页面只显示到目前为止渲染的内容。这是一种优雅的错误处理——如果在自动构建过程中找不到 PDF 文件，不要继续渲染聊天界面。
 
-#### 段落 4: 聊天界面（第 103-152 行）
+#### 段落 3.5: 推荐问题（Suggested Questions）
+
+```python
+SUGGESTED_QUESTIONS = {
+    "OmniPath": [
+        "What is OmniPath and what types of biological data does it integrate?",
+        "How does OmniPath compare to other pathway databases like KEGG or Reactome?",
+        "What are the main data sources combined in OmniPath?",
+    ],
+    "CellChat & CellPhoneDB": [
+        "What is CellChat and how does it infer cell-cell communication?",
+        "How does CellPhoneDB predict ligand-receptor interactions from scRNA-seq data?",
+        "What are the differences between CellChat and CellPhoneDB?",
+    ],
+    "Oocyte Biology": [
+        "What metabolites are secreted by cumulus cells during oocyte maturation?",
+        "How do cumulus cells influence oocyte developmental competence?",
+        "What signaling pathways regulate oocyte maturation?",
+    ],
+}
+
+if not st.session_state.chat_history:
+    st.markdown("### Try asking:")
+    for category, questions in SUGGESTED_QUESTIONS.items():
+        st.markdown(f"**{category}**")
+        for q in questions:
+            if st.button(q, key=q):
+                st.session_state.pending_question = q
+                st.rerun()
+```
+
+**做了什么：**
+- 定义了一组按类别分组的推荐问题，帮助用户快速开始对话
+- 只在聊天历史为空时显示（一旦用户开始对话，推荐问题消失）
+- 用户点击某个推荐问题后，把它存入 `st.session_state.pending_question`，然后调用 `st.rerun()` 重新执行脚本
+- 在下一次执行中，聊天输入处理逻辑会读取 `pending_question` 并作为用户的提问处理
+
+#### 段落 4: 聊天界面
 
 ```python
 # 渲染历史消息
@@ -879,8 +936,12 @@ for idx, message in enumerate(st.session_state.chat_history):
                 for citation in message["citations"]:
                     st.markdown(f"*{citation}*")
 
-# 处理新输入
-if prompt := st.chat_input("Ask your question about oocyte research..."):
+# 处理推荐问题点击或用户输入
+pending = st.session_state.pop("pending_question", None)
+typed = st.chat_input("Ask your question about oocyte research...")
+prompt = pending or typed
+
+if prompt:
     st.session_state.chat_history.append({"role": "user", "content": prompt})
 
     with st.chat_message("assistant"):
@@ -890,12 +951,21 @@ if prompt := st.chat_input("Ask your question about oocyte research..."):
             with st.spinner("Researching..."):
                 try:
                     response = st.session_state.rag_pipeline.ask(prompt)
+                    answer = response["answer"]
+                    sources = response.get("source_documents", [])
+
+                    citations = []
+                    for doc in sources:
+                        src = doc.metadata.get("source", "")
+                        page = doc.metadata.get("page", "")
+                        citations.append(f"{src}, Page {int(page) + 1}")
+
                     st.session_state.chat_history.append({
                         "role": "assistant",
-                        "content": response,
-                        "citations": ["More detailed citations will be implemented"]
+                        "content": answer,
+                        "citations": citations
                     })
-                    st.write(response)
+                    st.write(answer)
                 except Exception as e:
                     st.error(f"Error generating response: {str(e)}")
 
@@ -905,7 +975,7 @@ col1, col2 = st.columns(2)
 with col1:
     if st.button("Clear Conversation"):
         st.session_state.chat_history = []
-        st.experimental_rerun()
+        st.rerun()
 with col2:
     if st.button("Export Chat"):
         st.info("Export feature coming soon!")
@@ -918,29 +988,42 @@ with col2:
        每条消息用 st.chat_message() 显示对应的头像（user/assistant）
        如果消息有 citations，用 st.expander 折叠展示
        ↓
-第2步: st.chat_input() 显示输入框，等待用户输入
-       ↓ 用户输入 "What is BMP15?" 并按回车
+第2步: 检查是否有 pending_question（来自推荐问题点击）
+       以及 st.chat_input() 显示输入框，等待用户输入
+       prompt = pending or typed
+       ↓ 用户输入 "What is BMP15?" 并按回车（或点击推荐问题）
        ↓
 第3步: 把用户消息追加到 chat_history
        ↓
 第4步: 调用 rag_pipeline.ask(prompt)
        → Question Condensing → Retrieval → Generation
        ↓
-第5步: 把 AI 回复追加到 chat_history（带 citations 占位符）
+第5步: 从 response 中提取 answer 和 source_documents
+       遍历 source_documents，提取每个文档的 source 文件名和 page 页码
+       生成引用列表（如 "paper1.pdf, Page 5"）
        ↓
-第6步: st.write(response) 显示回答
+第6步: 把 AI 回复追加到 chat_history（带真实 citations）
        ↓
-第7步: 脚本执行完毕，页面更新，显示完整对话
+第7步: st.write(answer) 显示回答
+       ↓
+第8步: 脚本执行完毕，页面更新，显示完整对话
 ```
 
-**`if prompt := st.chat_input(...)` 是什么语法？**
+**输入处理：`pending` vs `typed`**
 
-这是 Python 3.8 的 **walrus operator** (`:=`)。它同时做了赋值和条件检查：
-- 如果用户输入了内容，`prompt` 被赋值为输入的字符串，条件为 `True`，进入 if 块
-- 如果用户没输入（页面刚加载），`prompt` 为 `None`，条件为 `False`，跳过
+```python
+pending = st.session_state.pop("pending_question", None)
+typed = st.chat_input("Ask your question about oocyte research...")
+prompt = pending or typed
+```
+
+这里用两步获取用户输入：
+- `pending`：来自推荐问题的点击（上一轮 rerun 时存入 `session_state.pending_question`）。`pop()` 取出后立即删除，避免重复处理。
+- `typed`：用户在输入框中手动输入的文本。
+- `prompt = pending or typed`：优先处理推荐问题点击，否则处理手动输入。两者都为 `None` 时不执行。
 
 **底部按钮：**
-- **Clear Conversation：** 清空 `chat_history` 并刷新页面。注意也使用 `st.experimental_rerun()` 强制重新执行脚本，这样界面立刻更新。
+- **Clear Conversation：** 清空 `chat_history` 并调用 `st.rerun()` 强制重新执行脚本，这样界面立刻更新。
 - **Export Chat：** 占位功能，目前只显示 "coming soon" 提示。
 
 ### 面试问答
@@ -959,51 +1042,51 @@ with col2:
 
 **Q: How does the citation feature work?**
 
-> "Currently, the citation implementation is a placeholder — you can see `citations: ['More detailed citations will be implemented']` in the code. However, the infrastructure for real citations is already in place. The `RAGPipeline.ask()` method returns a `source_documents` list in its response, where each document carries `metadata` with the source PDF filename and page number. To implement full citations, I'd extract that metadata and display it in the `st.expander` component, like: 'Source: s41467-021-21246-9.pdf, Page 5.' The UI component — the expandable citation panel — is already built; it just needs to be connected to the actual source_documents data."
+> "The citation feature extracts real source information from the retrieved documents. When `RAGPipeline.ask()` returns a response, it includes a `source_documents` list where each document carries `metadata` with the source PDF filename and page number. The app iterates over these documents, extracts the `source` and `page` fields from each document's metadata, and formats them as readable citations like 'paper1.pdf, Page 5'. The page number is incremented by 1 since PyPDFLoader uses zero-based page indexing. These citations are stored alongside the assistant's response in `chat_history` and displayed in an expandable `st.expander('View Citations')` panel beneath each answer. This gives researchers full traceability — they can verify any AI-generated claim against the specific passage in the original paper."
 
 ---
 
 **Q: What happens if the vector store doesn't exist when the app starts?**
 
-> "The app handles this gracefully through defensive error handling. In the initialization block, it tries to call `load_vector_store('data/chroma_db')`. If that directory doesn't exist, the method raises a `ValueError`, which the app catches and displays as `st.error('Vector store not found. Please process PDF documents first.')`, followed by `st.stop()` which halts the script. The user sees a clear error message telling them to run `process_pdfs.py` first. The app doesn't crash — it just stops rendering the chat interface since there's no knowledge base to query."
+> "The app handles this gracefully through an auto-build fallback. In the initialization block, it first tries to call `load_vector_store('data/chroma_db')`. If that directory doesn't exist, the method raises a `ValueError`. Instead of stopping, the app catches this exception and automatically builds the vector store on the fly: it imports `DocumentProcessor`, loads and splits all PDFs from `data/papers/`, and calls `create_vector_store()` to embed and persist them. The user sees an informational message — 'Building vector store for the first time, this may take a moment...' — and the app continues normally once the build completes. This eliminates the need to run `process_pdfs.py` separately before launching the app. The only hard failure is if no PDF documents are found in `data/papers/`, in which case it displays an error and stops."
 
 ---
 
 ## 7. `requirements.txt`
 
 ```
-streamlit==1.31.1
-langchain==0.1.0
-langchain-community==0.0.13
-langchain-openai==0.0.2
-openai==1.60.0
-chromadb==0.3.29
-python-dotenv==1.0.0
-pypdf2==3.0.1
-tiktoken==0.5.2
+streamlit>=1.40.0
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.2.0
+openai>=1.60.0
+chromadb>=0.5.0
+python-dotenv>=1.0.0
+pypdf>=4.0.0
+tiktoken>=0.7.0
 ```
 
 每个依赖的作用：
 
 | 包 | 版本 | 用在哪里 | 做什么 |
 |----|------|---------|--------|
-| `streamlit` | 1.31.1 | `app.py` | Web UI 框架，提供 chat 组件、session state、部署 |
-| `langchain` | 0.1.0 | 全部 `src/` | LLM 应用编排框架，提供 Chain、Memory、TextSplitter |
-| `langchain-community` | 0.0.13 | `src/` | LangChain 社区集成包，提供 PyPDFLoader、ChatOpenAI、Chroma |
-| `langchain-openai` | 0.0.2 | `src/` | LangChain 的 OpenAI 专用集成，提供 OpenAIEmbeddings |
-| `openai` | 1.60.0 | (间接) | OpenAI Python SDK，langchain-openai 底层依赖 |
-| `chromadb` | 0.3.29 | `src/embeddings.py` | 向量数据库，存储和检索文档嵌入 |
-| `python-dotenv` | 1.0.0 | `src/embeddings.py` | 从 `.env` 文件加载环境变量（API Key） |
-| `pypdf2` | 3.0.1 | (间接) | PyPDFLoader 底层依赖，负责 PDF 文件解析 |
-| `tiktoken` | 0.5.2 | (间接) | OpenAI 的 tokenizer，LangChain 用它来计算 token 数 |
+| `streamlit` | >=1.40.0 | `app.py` | Web UI 框架，提供 chat 组件、session state、部署 |
+| `langchain` | >=0.3.0 | 全部 `src/` | LLM 应用编排框架，提供核心抽象和编排逻辑 |
+| `langchain-community` | >=0.3.0 | `src/` | LangChain 社区集成包，提供 PyPDFLoader、Chroma 等 |
+| `langchain-openai` | >=0.2.0 | `src/` | LangChain 的 OpenAI 专用集成，提供 ChatOpenAI 和 OpenAIEmbeddings |
+| `openai` | >=1.60.0 | (间接) | OpenAI Python SDK，langchain-openai 底层依赖 |
+| `chromadb` | >=0.5.0 | `src/embeddings.py` | 向量数据库，存储和检索文档嵌入（0.4+ 自动持久化） |
+| `python-dotenv` | >=1.0.0 | `src/embeddings.py`, `app.py` | 从 `.env` 文件加载环境变量（API Key） |
+| `pypdf` | >=4.0.0 | (间接) | PyPDFLoader 底层依赖，负责 PDF 文件解析（替代已弃用的 pypdf2） |
+| `tiktoken` | >=0.7.0 | (间接) | OpenAI 的 tokenizer，LangChain 用它来计算 token 数 |
 
 ### 面试问答
 
 ---
 
-**Q: Why did you pin specific versions in requirements.txt?**
+**Q: Why do you use `>=` version ranges instead of exact pins in requirements.txt?**
 
-> "Version pinning ensures reproducibility. LangChain in particular was evolving rapidly during this period — breaking changes between minor versions were common. If I specified `langchain>=0.1.0`, someone installing the project six months later might get version 0.3.0, which could have completely different APIs. By pinning `langchain==0.1.0`, I guarantee that anyone cloning the repo gets exactly the same behavior I tested against. In a production environment, I'd also use a lock file — like pip-compile or Poetry — to pin transitive dependencies as well."
+> "I switched from exact version pinning (`==`) to minimum version constraints (`>=`) for pragmatic reasons. With exact pins, every security patch or bug fix requires manually updating the version. Using `>=` with a tested minimum version — like `langchain>=0.3.0` — allows automatic adoption of compatible updates while guaranteeing the minimum feature set I depend on. LangChain's ecosystem has stabilized significantly since 0.3.x, with clearer separation between `langchain`, `langchain-community`, and `langchain-openai`, so the risk of breaking changes within a major version is lower. In a production environment, I'd complement this with a lock file — like `pip-compile` or Poetry's `poetry.lock` — to pin exact resolved versions for fully reproducible builds, while keeping `requirements.txt` as the looser specification."
 
 ---
 
@@ -1011,19 +1094,20 @@ tiktoken==0.5.2
 
 把所有文件串起来，看一个完整的用户旅程：
 
-### 旅程 1: 管理员准备知识库（跑一次）
+### 旅程 1: 管理员准备知识库（跑一次，或由 app 自动构建）
 
 ```
-管理员把 3 篇论文放进 data/pdfs/
+管理员把 3 篇论文放进 data/papers/
          ↓
-运行 python process_pdfs.py
+方式 A: 运行 python process_pdfs.py（离线预处理）
+方式 B: 直接启动 app.py，如果向量库不存在会自动构建
          ↓
-process_pdfs.py:
+process_pdfs.py 或 app.py 自动构建流程:
   │
   ├─ DocumentProcessor.__init__()
   │    └─ 创建 TextSplitter(chunk_size=1000, overlap=200)
   │
-  ├─ DocumentProcessor.load_pdfs("data/pdfs")
+  ├─ DocumentProcessor.load_pdfs("data/papers")
   │    ├─ DirectoryLoader 找到 3 个 PDF
   │    ├─ PyPDFLoader 提取每页文本 → 约 30 个 Document
   │    └─ TextSplitter 切分 → 约 100 个 Document 块
@@ -1036,9 +1120,7 @@ process_pdfs.py:
        ├─ Chroma.from_documents():
        │    ├─ 对 100 个块逐个调用 OpenAI Embedding API
        │    │    每个块 → 1536 维向量
-       │    └─ 存入 ChromaDB 内存索引
-       ├─ vector_store.persist()
-       │    └─ 写入 data/chroma_db/ 目录（SQLite + 索引文件）
+       │    └─ 存入 ChromaDB 并自动持久化到 data/chroma_db/（SQLite + 索引文件）
        └─ 打印 "Vector store created successfully!"
 ```
 
@@ -1048,21 +1130,25 @@ process_pdfs.py:
 用户打开浏览器访问 Streamlit 应用
          ↓
 app.py 首次执行:
+  ├─ load_dotenv() 加载 .env 环境变量
+  ├─ 检查 OPENAI_API_KEY（先 .env，再 Streamlit Cloud Secrets）
   ├─ session_state 初始化（空列表、None、False）
   ├─ VectorStoreManager().load_vector_store("data/chroma_db")
   │    └─ 从磁盘加载向量库（不调 API，很快）
+  │    └─ 如果不存在 → 自动构建：加载 data/papers/ 中的 PDF → 编码 → 持久化
   ├─ RAGPipeline(vector_store) — 复用已加载的向量库实例
   │    ├─ self.vector_store = vector_store — 直接使用传入的实例
-  │    ├─ ConversationBufferMemory() — 空的对话记忆
-  │    └─ ConversationalRetrievalChain — 组装完整链
+  │    ├─ ConversationBufferMemory(output_key="answer") — 空的对话记忆
+  │    └─ ConversationalRetrievalChain(output_key="answer") — 组装完整链
   └─ is_initialized = True
          ↓
+显示推荐问题（SUGGESTED_QUESTIONS），或用户直接输入
 用户输入: "What pathways regulate oocyte maturation?"
          ↓
 app.py 重新执行:
   ├─ is_initialized == True → 跳过初始化
   ├─ 渲染空的聊天界面
-  ├─ st.chat_input 捕获用户输入
+  ├─ pending_question 或 st.chat_input 捕获用户输入
   ├─ 追加用户消息到 chat_history
   └─ rag_pipeline.ask("What pathways regulate oocyte maturation?")
        │
@@ -1081,17 +1167,18 @@ app.py 重新执行:
        │    │    └─ GPT-3.5-turbo 生成回答
        │    │
        │    └─ Step 4: Memory Update
-       │         └─ 存储 Q&A 对到 chat_history
+       │         └─ 存储 Q&A 对到 chat_history（通过 output_key="answer"）
        │
        └─ 返回 {"answer": "Several pathways...", "source_documents": [...]}
          ↓
-st.write(response) → 在界面显示回答
-追加 AI 消息到 chat_history
+提取 answer 和 source_documents → 构建 citations 列表
+st.write(answer) → 在界面显示回答
+追加 AI 消息到 chat_history（带真实引用信息）
          ↓
 用户接着问: "Are any of those druggable?"
          ↓
 app.py 重新执行:
-  ├─ 渲染之前的 2 条消息
+  ├─ 渲染之前的 2 条消息（含可展开的引用）
   └─ rag_pipeline.ask("Are any of those druggable?")
        │
        └─ Step 1: Question Condensing

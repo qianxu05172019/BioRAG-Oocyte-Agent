@@ -2,7 +2,7 @@
 
 > **目标岗位：** Data Scientist (Customer-Facing), QIAGEN Digital Insights
 > **岗位核心：** 生物医学知识图谱 + omics 数据 + AI-driven discovery + pre-sales + 科学叙事
-> **你的项目：** BioRAG — 基于 RAG 架构的卵母细胞研究智能问答系统（LangChain + OpenAI + ChromaDB + Streamlit）
+> **你的项目：** BioRAG — 基于 RAG 架构的卵母细胞研究智能问答系统（LangChain + langchain_classic + langchain-openai + OpenAI + ChromaDB + Streamlit）
 
 ---
 
@@ -17,7 +17,7 @@ HR 关注的是你的动机、沟通力、协作能力、文化匹配度。针�
 这是开场题，要在 90 秒内串起「学术背景 → 技术能力 → 业务意识 → 为什么是这个岗位」。
 
 **正面教材：**
-> "I have a background in biomedical sciences with hands-on experience in computational biology and data science. During my graduate work, I developed a strong foundation in omics data analysis and bioinformatics pipelines. More recently, I built a RAG-based AI system called BioRAG, which transforms unstructured scientific literature on oocyte biology into a searchable, conversational knowledge base using LangChain, OpenAI embeddings, ChromaDB, and Streamlit. That project deepened my understanding of how AI and knowledge representation can accelerate biomedical discovery. What excites me about this role at QIAGEN is the opportunity to sit at the intersection of cutting-edge biomedical knowledge graphs and real customer impact — helping pharma and biotech teams translate their research questions into actionable data-driven workflows. I see a direct line from what I've built independently to the scale and depth of QIAGEN's Biomedical Knowledge Base."
+> "I have a background in biomedical sciences with hands-on experience in computational biology and data science. During my graduate work, I developed a strong foundation in omics data analysis and bioinformatics pipelines. More recently, I built a RAG-based AI system called BioRAG, which transforms unstructured scientific literature on oocyte biology, signaling pathway databases, and cell-cell communication tools into a searchable, conversational knowledge base using LangChain, OpenAI embeddings, ChromaDB, and Streamlit. That project deepened my understanding of how AI and knowledge representation can accelerate biomedical discovery. What excites me about this role at QIAGEN is the opportunity to sit at the intersection of cutting-edge biomedical knowledge graphs and real customer impact — helping pharma and biotech teams translate their research questions into actionable data-driven workflows. I see a direct line from what I've built independently to the scale and depth of QIAGEN's Biomedical Knowledge Base."
 
 **反面教材：**
 > "I'm a data scientist. I know Python, I've used some AI tools, and I'm looking for a new opportunity."
@@ -45,7 +45,7 @@ HR 关注的是你的动机、沟通力、协作能力、文化匹配度。针�
 HR 不懂技术细节，所以要讲 **故事**，不要讲 API。用「问题 → 方案 → 结果」的框架。
 
 **正面教材：**
-> "Researchers studying oocyte biology face a common challenge — they're drowning in literature. Hundreds of papers, each with dense experimental results, and no efficient way to ask questions across all of them at once. I built BioRAG to solve that. It takes scientific PDFs, breaks them into semantically meaningful chunks, encodes them into vector representations, and stores them in a searchable knowledge base. A researcher can then ask a natural language question like 'What signaling pathways regulate oocyte maturation?' and get an evidence-based answer with citations back to the original papers. I deployed it as a web application so anyone can use it without writing code. The core insight is this: unstructured scientific knowledge becomes exponentially more valuable when you make it structured and queryable — which is exactly what QIAGEN's Biomedical Knowledge Base does at an industry scale."
+> "Researchers studying oocyte biology and cell-cell communication face a common challenge — they're drowning in literature. Hundreds of papers across oocyte maturation, signaling pathway databases like OmniPath, and cell-cell communication tools like CellChat and CellPhoneDB, each with dense experimental results, and no efficient way to ask questions across all of them at once. I built BioRAG to solve that. It takes scientific PDFs, breaks them into semantically meaningful chunks, encodes them into vector representations, and stores them in a searchable knowledge base. A researcher can then ask a natural language question like 'What signaling pathways regulate oocyte maturation?' or 'How does CellPhoneDB predict ligand-receptor interactions from scRNA-seq data?' and get an evidence-based answer with real citations — source filename and page number — back to the original papers. I deployed it as a web application with suggested questions organized by category so anyone can use it without writing code. The core insight is this: unstructured scientific knowledge becomes exponentially more valuable when you make it structured and queryable — which is exactly what QIAGEN's Biomedical Knowledge Base does at an industry scale."
 
 **反面教材：**
 > "It's a chatbot that uses OpenAI and LangChain to answer questions about PDFs. I used ChromaDB for vector storage and Streamlit for the frontend."
@@ -303,7 +303,7 @@ Hiring Manager 会重点考察你的 **技术深度**（RAG/knowledge graph/omic
 技术面试的开场题。要从数据流角度讲清楚，不要堆砌术语。
 
 **正面教材：**
-> "BioRAG follows a standard RAG architecture with four stages. Stage one is document ingestion: I use PyPDFLoader to extract text from scientific PDFs, then RecursiveCharacterTextSplitter to chunk the text into 1000-character segments with 200-character overlaps. The overlap ensures that if a key sentence falls on a boundary, it's preserved in at least one chunk. Stage two is embedding and indexing: each chunk is encoded into a 1536-dimensional dense vector using OpenAI's embedding model, then stored in ChromaDB with metadata like the source file and page number. Stage three is retrieval: when a user asks a question, the query is embedded using the same model, and ChromaDB performs a cosine similarity search to return the top-4 most relevant chunks. Stage four is generation: those chunks, along with the conversation history, are passed to GPT-3.5-turbo via LangChain's ConversationalRetrievalChain, which generates a grounded answer. The UI is built with Streamlit, featuring a chat interface, expandable citation panels, and session state management. The whole system is deployed on Streamlit Cloud with CI/CD through GitHub."
+> "BioRAG follows a standard RAG architecture with four stages. Stage one is document ingestion: I use PyPDFLoader to extract text from scientific PDFs, then RecursiveCharacterTextSplitter to chunk the text into 1000-character segments with 200-character overlaps. The overlap ensures that if a key sentence falls on a boundary, it's preserved in at least one chunk. Stage two is embedding and indexing: each chunk is encoded into a 1536-dimensional dense vector using OpenAI's `OpenAIEmbeddings()` (defaults to text-embedding-ada-002), then stored in ChromaDB with metadata like the source file and page number. Stage three is retrieval: when a user asks a question, the query is embedded using the same model, and ChromaDB performs an L2 (Euclidean distance) search — its default metric — to return the top-4 most relevant chunks. Stage four is generation: those chunks, along with the conversation history, are passed to `ChatOpenAI(temperature=0)` (defaults to GPT-3.5-turbo) via LangChain's `ConversationalRetrievalChain` (imported from `langchain_classic.chains` in langchain 1.x), which generates a grounded answer. Notably, both the memory and the chain are configured with `output_key="answer"` because the chain returns multiple keys (`answer` and `source_documents`), and the memory needs to know which output to store. The UI is built with Streamlit, featuring a chat interface with suggested questions organized by category (OmniPath, CellChat & CellPhoneDB, Oocyte Biology), expandable citation panels showing real source filename and page number, auto-build of the vector store on first launch, and session state management. The app supports both `.env` and Streamlit Cloud secrets for API key configuration. The whole system is deployed on Streamlit Cloud with CI/CD through GitHub."
 
 **反面教材：**
 > "I used LangChain to connect OpenAI with ChromaDB. It loads PDFs, creates embeddings, and then answers questions."
@@ -426,12 +426,12 @@ QIAGEN 的客户日常处理 omics 数据，你必须展示领域知识。
 
 ---
 
-### TM-Q9: In BioRAG you set temperature=0. Walk me through what that means and when you'd change it.
+### TM-Q9: In BioRAG you use `ChatOpenAI(temperature=0)`. Walk me through what that means and when you'd change it.
 
 看你是否理解 LLM 参数的实际意义和场景化应用。
 
 **正面教材：**
-> "Temperature controls the randomness of the model's token selection. At temperature zero, the model uses greedy decoding — it always picks the highest-probability next token. This makes the output deterministic and factual, which is exactly what you want for scientific Q&A where accuracy is paramount. I set it to zero in BioRAG because a researcher asking about oocyte maturation pathways needs a consistent, evidence-based answer — not creative variations.
+> "Temperature controls the randomness of the model's token selection. At temperature zero, the model uses greedy decoding — it always picks the highest-probability next token. This makes the output deterministic and factual, which is exactly what you want for scientific Q&A where accuracy is paramount. I set it to zero in BioRAG via `ChatOpenAI(temperature=0)` — which defaults to GPT-3.5-turbo without an explicitly pinned model — because a researcher asking about oocyte maturation pathways needs a consistent, evidence-based answer — not creative variations.
 >
 > When I'd change it: if I were building a tool for hypothesis generation — 'suggest novel connections between gene X and disease Y' — I might set temperature to 0.3-0.5 to allow the model to explore less obvious associations. For creative tasks like generating summaries with varied phrasing, 0.7-0.9 would be appropriate. But in a customer-facing product at QIAGEN, I'd generally keep temperature low. Pharma customers need reproducibility — if they run the same query twice, they expect the same answer. You can always add controlled variability through prompt engineering rather than temperature."
 
@@ -469,7 +469,7 @@ QIAGEN 的客户日常处理 omics 数据，你必须展示领域知识。
 这题是给你搭桥的——从你项目的不足过渡到 QIAGEN 的优势。
 
 **正面教材：**
-> "BioRAG has several meaningful limitations that QIAGEN's platform inherently solves. First, knowledge quality: my system ingests raw PDF text without validating the scientific claims. QIAGEN's knowledge base is curated by PhD scientists who verify each relationship against primary literature — that's a fundamentally higher trust level. Second, relational reasoning: BioRAG treats documents as bags of text chunks. It can't answer 'what's upstream of gene X?' because it doesn't model entity relationships. QIAGEN's knowledge graph explicitly encodes those relationships. Third, scale: I have three papers. QIAGEN's knowledge base covers millions of findings across the entire biomedical literature. Fourth, data types: I only handle text. QIAGEN integrates structured omics data — expression profiles, variant annotations, pathway models. Fifth, multimodal content: my PDF parser can't handle figures, tables, or supplementary data, which contain critical experimental evidence.
+> "BioRAG has several meaningful limitations that QIAGEN's platform inherently solves. First, knowledge quality: my system ingests raw PDF text without validating the scientific claims. QIAGEN's knowledge base is curated by PhD scientists who verify each relationship against primary literature — that's a fundamentally higher trust level. Second, relational reasoning: BioRAG treats documents as bags of text chunks. It can't answer 'what's upstream of gene X?' because it doesn't model entity relationships. QIAGEN's knowledge graph explicitly encodes those relationships. Third, scale: I have a handful of papers covering oocyte biology, OmniPath, and CellChat/CellPhoneDB. QIAGEN's knowledge base covers millions of findings across the entire biomedical literature. Fourth, data types: I only handle text. QIAGEN integrates structured omics data — expression profiles, variant annotations, pathway models. Fifth, multimodal content: my PDF parser can't handle figures, tables, or supplementary data, which contain critical experimental evidence.
 >
 > Building BioRAG gave me deep appreciation for what it takes to build a production-grade biomedical knowledge system. It also gave me the technical foundation to understand and communicate the value of what QIAGEN has built at scale."
 
@@ -485,9 +485,11 @@ QIAGEN 的客户日常处理 omics 数据，你必须展示领域知识。
 考你对 LangChain 内部机制的理解。
 
 **正面教材：**
-> "ConversationalRetrievalChain handles multi-turn dialogue through a critical intermediate step called question condensing. Here's the problem it solves: if a user asks 'What pathways regulate oocyte maturation?' and then follows up with 'Are any of those druggable?', the second question — taken in isolation — is meaningless for retrieval. 'Those' refers to the pathways from the previous answer, but the vector database doesn't have that context.
+> "ConversationalRetrievalChain — which in langchain 1.x is imported from `langchain_classic.chains` since the legacy chain APIs moved to the `langchain_classic` package — handles multi-turn dialogue through a critical intermediate step called question condensing. Here's the problem it solves: if a user asks 'What pathways regulate oocyte maturation?' and then follows up with 'Are any of those druggable?', the second question — taken in isolation — is meaningless for retrieval. 'Those' refers to the pathways from the previous answer, but the vector database doesn't have that context.
 >
 > So the chain first sends the current question plus the conversation history to the LLM, which rewrites it into a standalone question: 'Are any pathways that regulate oocyte maturation druggable?' This condensed question is then used for retrieval, and the retrieved documents plus the condensed question go to the LLM for final answer generation.
+>
+> An important implementation detail: both `ConversationBufferMemory` and the chain itself must be configured with `output_key="answer"`. This is because the chain returns multiple keys — `answer` and `source_documents` — and the memory needs to know which output to store in the conversation history. Without this, LangChain raises an error about ambiguous output keys.
 >
 > Why this matters for QIAGEN's customers: real research is conversational. A scientist doesn't ask one question — they ask a sequence of increasingly specific questions as they explore a hypothesis. If the system can't maintain context across turns, the user has to repeat themselves every time, which breaks the flow and kills adoption. Conversational memory is essential for user experience in a discovery tool."
 
@@ -587,7 +589,7 @@ QIAGEN 的客户日常处理 omics 数据，你必须展示领域知识。
 JD 要求 Python proficiency。用 BioRAG 的具体代码来回答。
 
 **正面教材：**
-> "Python is my primary language for data analysis and application development. In BioRAG, I used Python across the entire stack. For data processing, I wrote a DocumentProcessor class that uses PyPDFLoader for extraction and RecursiveCharacterTextSplitter for chunking — handling edge cases like empty pages and encoding issues. For the vector pipeline, I built a VectorStoreManager class that interfaces with OpenAI's embedding API and manages ChromaDB persistence — creating, loading, and querying vector stores. For the RAG pipeline itself, I architected a class that orchestrates LangChain's ConversationalRetrievalChain with conversation memory management.
+> "Python is my primary language for data analysis and application development. In BioRAG, I used Python across the entire stack. For data processing, I wrote a DocumentProcessor class that uses PyPDFLoader for extraction and RecursiveCharacterTextSplitter for chunking — handling edge cases like empty pages and encoding issues. For the vector pipeline, I built a VectorStoreManager class that interfaces with OpenAI's embedding API (via `langchain_openai.OpenAIEmbeddings`) and manages ChromaDB persistence — creating, loading, and querying vector stores. For the RAG pipeline itself, I architected a class that orchestrates `ConversationalRetrievalChain` from `langchain_classic.chains` with `ConversationBufferMemory` from `langchain_classic.memory`, using `ChatOpenAI` from `langchain_openai` — carefully configuring `output_key="answer"` so the memory correctly tracks which output to store when the chain returns multiple keys. I also wrote a standalone `process_pdfs.py` script for batch PDF ingestion outside the Streamlit app.
 >
 > Beyond this project, I'm proficient with the standard data science stack — pandas and numpy for data manipulation, scikit-learn for statistical analysis, matplotlib and seaborn for visualization. For bioinformatics specifically, I've worked with Biopython for sequence analysis and scanpy for single-cell transcriptomics. I'm also comfortable with R for statistical analysis, particularly DESeq2 and edgeR for differential expression analysis, which is directly relevant to the omics workflows QIAGEN's customers use."
 
@@ -664,21 +666,21 @@ JD 明确要求 "use case summaries, case studies, white papers." 用你的项�
 |------|------|
 | **Project** | BioRAG-Oocyte-Agent |
 | **类型** | RAG-based scientific Q&A system |
-| **领域** | Oocyte biology / Reproductive sciences |
-| **Tech Stack** | Python, LangChain, OpenAI GPT-3.5-turbo, ChromaDB, Streamlit |
-| **Embedding** | OpenAI text-embedding-ada-002 (1536-dim) |
+| **领域** | Oocyte biology / Reproductive sciences, OmniPath (signaling pathway database), CellChat & CellPhoneDB (cell-cell communication) |
+| **Tech Stack** | Python, LangChain, langchain_classic (legacy chain/memory APIs), langchain-openai, OpenAI ChatOpenAI (defaults to GPT-3.5-turbo), ChromaDB, Streamlit |
+| **Embedding** | `OpenAIEmbeddings()` from `langchain_openai` (defaults to text-embedding-ada-002, 1536-dim; not explicitly pinned) |
 | **Vector DB** | ChromaDB (local persistent) |
-| **LLM** | GPT-3.5-turbo, temperature=0 |
-| **Doc Processing** | PyPDFLoader + RecursiveCharacterTextSplitter |
+| **LLM** | `ChatOpenAI(temperature=0)` from `langchain_openai` (defaults to GPT-3.5-turbo; not explicitly pinned) |
+| **Doc Processing** | PyPDFLoader + RecursiveCharacterTextSplitter (backed by `pypdf>=4.0.0`, not pypdf2) |
 | **Chunking** | chunk_size=1000, overlap=200 |
-| **Retrieval** | Dense vector, top-K=4, cosine similarity |
-| **Memory** | ConversationBufferMemory |
-| **Chain** | ConversationalRetrievalChain |
-| **Frontend** | Streamlit (chat UI, session_state, expander citations) |
-| **Deployment** | Streamlit Cloud + GitHub CI/CD + Dev Container |
-| **Security** | .env / secrets.toml, .gitignore protected |
-| **Architecture** | Modular: document_loader / embeddings / rag_pipeline / app |
-| **Data** | 3 Nature-series papers (PDF) |
+| **Retrieval** | Dense vector, top-K=4, ChromaDB default L2 (Euclidean distance) — not cosine similarity unless explicitly configured |
+| **Memory** | `ConversationBufferMemory` from `langchain_classic.memory` with `output_key="answer"` (needed because the chain returns both `answer` and `source_documents`) |
+| **Chain** | `ConversationalRetrievalChain` from `langchain_classic.chains` with `output_key="answer"` (in langchain 1.x, legacy chain APIs moved to `langchain_classic`) |
+| **Frontend** | Streamlit (chat UI, session_state, expander citations with real source filename + page number, suggested questions by category [OmniPath / CellChat & CellPhoneDB / Oocyte Biology], auto-build vector store on first launch) |
+| **Deployment** | Streamlit Cloud + GitHub CI/CD + Dev Container (dependencies pinned with `>=` minimum versions, not `==` exact pins) |
+| **Security** | .env (via python-dotenv) + Streamlit Cloud secrets (`st.secrets`) dual support, .gitignore protected |
+| **Architecture** | Modular: document_loader / embeddings / rag_pipeline / app / process_pdfs (standalone script for batch PDF ingestion) |
+| **Data** | Scientific papers (PDF) covering oocyte biology, OmniPath, CellChat & CellPhoneDB |
 | **License** | MIT |
 
 ---
@@ -689,7 +691,7 @@ JD 明确要求 "use case summaries, case studies, white papers." 用你的项�
 
 | JD 关键词 | 你的对标经验 |
 |-----------|-------------|
-| Biomedical Knowledge Base | BioRAG 将论文转化为可查询的知识库 |
+| Biomedical Knowledge Base | BioRAG 将论文（卵母细胞生物学、OmniPath、CellChat/CellPhoneDB）转化为可查询的知识库 |
 | Knowledge graphs | 理解 graph vs vector 的 trade-off，知道 Cypher/Neo4j 基础 |
 | Omics data | 熟悉 transcriptomics/proteomics/genomics 数据类型和分析流程 |
 | AI-driven discovery | 端到端构建了 RAG 系统，理解 LLM 在科研中的应用和局限 |
@@ -697,7 +699,7 @@ JD 明确要求 "use case summaries, case studies, white papers." 用你的项�
 | Analytical frameworks | 设计了从 PDF 到向量到 LLM 的完整分析流水线 |
 | Technical demos / POC | Streamlit Cloud 上的 live demo |
 | Python proficiency | 全栈 Python 开发 + 数据科学库 + bioinformatics 工具 |
-| LLM exposure | OpenAI GPT-3.5-turbo, LangChain, RAG architecture |
+| LLM exposure | OpenAI ChatOpenAI (defaults to GPT-3.5-turbo), langchain_openai, langchain_classic, RAG architecture |
 | Communication / Storytelling | 架构文档、README、类比解释、多受众适配 |
 | Cross-functional collaboration | 独立项目中模拟多角色（PM/UX/scientist/engineer）思维 |
 | Scientific collateral | README with architecture diagrams, live deployed demo |
